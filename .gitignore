@@ -1,3 +1,9 @@
 # Project exclude paths
 /target/
 /.idea/
+/attract.txt
+/attract_small.txt
+/KMeans_diagram.png
+/kMeans_report.txt
+/Kohonen_diagram.png
+/kohonen_report.txt

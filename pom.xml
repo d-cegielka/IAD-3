@@ -26,6 +26,16 @@
             <version>RELEASE</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>de.alsclo</groupId>
+            <artifactId>voronoi-java</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>15-ea+2</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

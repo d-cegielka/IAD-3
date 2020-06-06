@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 public class KMeans {
-    private List<KVector> vectorList;
+    private final List<KVector> vectorList;
 
     public KMeans(final int numOfVectors, final double lowerRange, final double upperRange,
                   final double precision, final List<Double[]> entryPoints) {
@@ -16,12 +16,13 @@ public class KMeans {
         Random random = new Random();
         for (int i = 0; i < numOfVectors; i++) {
             double[] point = new double[2];
-            point = random.doubles(point.length,lowerRange,upperRange).toArray();
+            point = random.doubles(point.length, lowerRange, upperRange).toArray();
             vectorList.add(new KVector(point));
         }
+        double avgError = 0d;
+        int i=0;
 
-
-        for (int i = 0; i < 50; i++) {
+        while(true) {
             //Ustalanie przynależności punktów wejściowych do wektorów
             for(Double[] entryPoint:entryPoints){
                 assignPoint(entryPoint);
@@ -29,33 +30,69 @@ public class KMeans {
 
             //Obliczanie nowego punktu środkowego wektora jako średniej z przypisanych punktów
             for(KVector v:vectorList){
-                if(v.getAssignPoints().size() > 0){
+                if(v.getCluster().size() > 0){
                     v.calcNewCentroid();
                 }
             }
-
-            int counter = vectorList.size() * 2;
+            calcError();
+            double newAvgError = calcAvgError();
+            if (i > 0) {
+                double breakCond = (avgError - newAvgError) / newAvgError;
+                if(Double.isNaN(breakCond)) {
+                    breakCond = 0d;
+                }
+                System.out.println(breakCond);
+                if (breakCond <= precision) {
+                    break;
+                }
+            }
+            avgError = newAvgError;
+            i++;
+            /*int counter = vectorList.size() * 2;
             for(KVector v:vectorList){
                 Double[] diff = v.diffPoints();
                 if(diff[0] > precision){
+                    System.out.println(diff[0]);
                     counter--;
                     break;
                 }
                 if(diff[1] > precision){
+                    System.out.println(diff[1]);
                     counter--;
                     break;
                 }
             }
+
             if(counter == vectorList.size()*2){
                 calcError();
-            }
+                break;
+            }*/
         }
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("Średni błąd kwantyzacji: ").append(calcAvgError()).append("\n\n");
+        for(KVector kVector: vectorList) {
+            sb.append(kVector.toString());
+        }
+        sb.append("\n");
+        return sb.toString();
     }
 
     public List<KVector> getVectorList() {
         return vectorList;
     }
 
+    public double calcAvgError(){
+        double avgError = 0d;
+        for(KVector kVector: vectorList){
+           avgError += kVector.getError();
+        }
+        avgError /= vectorList.size();
+        return avgError;
+    }
 
     private void assignPoint(final Double[] entryPoint){
         //Double minDistance = calcEuclideanDistance(entryPoint,vectorList.get(0).getPoint());
@@ -63,27 +100,34 @@ public class KMeans {
         double minDistance = Double.MAX_VALUE;
 
         for (int i = 0; i < vectorList.size(); i++) {
-            Double distance = calcEuclideanDistance(entryPoint,vectorList.get(i).getPoint());
+            double distance = calcEuclideanDistance(entryPoint,vectorList.get(i).getCentroid());
+            vectorList.get(i).getCluster().removeIf(s -> Arrays.equals(s, entryPoint));
             if(minDistance > distance){
                 minDistance = distance;
                 indexVector = i;
-                vectorList.get(i).getAssignPoints().removeIf(s -> Arrays.equals(s, entryPoint));
             }
         }
-        vectorList.get(indexVector).getAssignPoints().add(entryPoint);
+        vectorList.get(indexVector).getCluster().add(entryPoint);
     }
 
     private void calcError(){
         for (KVector kVector : vectorList) {
-            double error = 0;
-            for (Double[] point : kVector.getAssignPoints()) {
-                error += calcEuclideanDistance(kVector.getPoint(), point);
+            double error = 0d;
+            if(kVector.getCluster().size() == 0) {
+                kVector.setError(error);
+                break;
             }
-            kVector.setError(error / kVector.getAssignPoints().size());
+            for (Double[] point : kVector.getCluster()) {
+                error += Math.pow(calcEuclideanDistance(kVector.getCentroid(), point),2);
+            }
+            error /= kVector.getCluster().size();
+            kVector.setError(error);
+            //System.out.println(kVector.getError());
         }
+        //System.out.println();
     }
 
-    private Double calcEuclideanDistance(Double[] point1, Double[] point2){
+    private double calcEuclideanDistance(Double[] point1, Double[] point2){
         return Math.sqrt((point1[0]-point2[0])*(point1[0]-point2[0]) +
                 (point1[1]-point2[1])*(point1[1]-point2[1]));
     }

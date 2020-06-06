@@ -1,16 +1,17 @@
 package org.iad;
 
+import de.alsclo.voronoi.Voronoi;
+import de.alsclo.voronoi.graph.Graph;
+import de.alsclo.voronoi.graph.Point;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 class KMeansTest {
-
     KMeans kMeans;
     List<Double[]> entryPoints = new ArrayList<>();
     @BeforeEach
@@ -26,12 +27,24 @@ class KMeansTest {
     @Test
     void getVectorList() {
         for(KVector k:kMeans.getVectorList()){
-            System.out.println(Arrays.toString(k.getPoint()));
+            System.out.println(Arrays.toString(k.getCentroid()));
             System.out.println("Przypisane: ");
-            for(int i =0; i< k.getAssignPoints().size();i++){
-                System.out.println(Arrays.toString(k.getAssignPoints().get(i)));
+            for(int i = 0; i< k.getCluster().size(); i++){
+                System.out.println(Arrays.toString(k.getCluster().get(i)));
             }
             System.out.println("\n\n\n");
         }
+        List<Point> points = new ArrayList<>();
+        for(KVector sk:kMeans.getVectorList()){
+            points.add(new Point(sk.getCentroid()[0],sk.getCentroid()[1]));
+        }
+        Voronoi voronoi = new Voronoi(points);
+        //voronoi.applyBoundingBox(-1,12,1200,720);
+        Graph graph = voronoi.getGraph();
+        System.out.print(graph.toString());
+
+
+
+
     }
 }
